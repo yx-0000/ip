@@ -18,25 +18,32 @@ public class TT {
         System.out.println(intro);
         System.out.println(divider);
 
+        String[] tasks = new String[100];
+        int taskCount = 0;
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
             String input = scanner.nextLine();
 
-            if(input.equals("bye")) {
+            if (input.equals("bye")) {
                 System.out.println(divider + bye);
                 System.out.println(divider);
                 break;
-            }
-
-            if (input.equals("list")) {
-                System.out.println(divider + "list");
+            } else if (input.equals("list")) {
                 System.out.println(divider);
-                break;
+
+                for (int i = 0; i < taskCount; i++) {
+                    System.out.println((i + 1) + ". " + tasks[i]);
+                }
+
+                System.out.println(divider);
+
+            } else {
+                tasks[taskCount] = input;
+                taskCount++;
+                System.out.println(divider + "added : " + input + "\n"+ divider);
             }
 
-            System.out.println(input);
-            System.out.println(divider);
         }
 
         scanner.close();
