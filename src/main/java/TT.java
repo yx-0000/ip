@@ -3,12 +3,15 @@ import java.util.Scanner;
 public class TT {
     public static void main(String[] args) {
 
-        String divider = "________________________________________ \n";
-        String banner = " ____        _        \n"
-                + "|  _ \\ _   _| | _____ \n"
-                + "| | | | | | | |/ / _ \\\n"
-                + "| |_| | |_| |   <  __/\n"
-                + "|____/ \\__,_|_|\\_\\___|\n";
+        String divider = "_________________________________________________________ \n";
+        String banner = """
+                     --------  --------
+                         -        -
+                         -        -
+                         -        -
+                         -        -
+                         -        -
+                    """;
 
         String intro = "Hello! I'm TT.\n" + "What can I do for you?";
         String bye = "Bye. Hope to see you again soon!";
@@ -24,61 +27,66 @@ public class TT {
 
         Scanner scanner = new Scanner(System.in);
 
-        while(true) {
+        while (true) {
             String input = scanner.nextLine();
 
-            if (input.equals("bye")) {
-                System.out.println(divider + bye);
-                System.out.println(divider);
-                break;
+            try {
+                if (input.equals("bye")) {
+                    System.out.println(divider + bye);
+                    System.out.println(divider);
+                    break;
 
-            } else if (input.equals("list")) {
-                System.out.println(divider + "Here are the tasks in your list: ");
+                } else if (input.equals("list")) {
+                    System.out.println(divider + "Here are the tasks in your list: ");
+                    for (int i = 0; i < taskCount; i++) {
+                        System.out.println((i + 1) + "." + tasks[i].toString());
+                    }
+                    System.out.println(divider);
 
-                for (int i = 0; i < taskCount; i++) {
-                    System.out.println( (i + 1) + "." + tasks[i].toString());
-                }
+                } else if (input.startsWith("mark ")) {
+                    int index = parseIndex(input.substring(5), taskCount);
+                    tasks[index].mark();
+                    System.out.println(divider + "Nice! I've marked this task as done: \n" + tasks[index].toString());
+                    System.out.println(divider);
 
-                System.out.println(divider);
+                } else if (input.startsWith("unmark ")) {
+                    int index = parseIndex(input.substring(7), taskCount);
+                    tasks[index].unmark();
+                    System.out.println(divider + "OK, I've marked this task as not done yet: \n" + tasks[index].toString());
+                    System.out.println(divider);
 
-            } else if (input.startsWith("mark ")) {
-                int index = Integer.parseInt(input.substring(5)) - 1;
-                tasks[index].mark();
-                System.out.println(divider + "Nice! I've marked this task as done: \n" + tasks[index].toString());
-                System.out.println(divider);
-
-            } else if (input.startsWith("unmark ")) {
-                int index = Integer.parseInt(input.substring(7)) - 1;
-                tasks[index].unmark();
-                System.out.println(divider + "OK, I've marked this task as not done yet: \n" + tasks[index].toString());
-                System.out.println(divider);
-
-            } else {
-                if(input.startsWith("todo ")) {
-                    String description = input.substring(4).trim();
-
+                } else if (input.equals("todo") || input.startsWith("todo ")) {
+                    String description = input.length() > 4 ? input.substring(4).trim() : "";
                     if (description.isEmpty()) {
-                        throw new IllegalArgumentException("Todo description cannot be empty");
-
-                    } else {
-                        Todo todo = new Todo(input.substring(5));
-                        tasks[taskCount] = todo;
-                        taskCount++;
-                        System.out.println(divider
-                                + addtask
-                                + "  "
-                                + todo.toString()
-                                + "\n"
-                                + "Now you have " + taskCount + " tasks in the list. \n"
-                                + divider);
+                        throw new TTException(" OOPS!!! The description of a todo cannot be empty.");
                     }
 
-                } else if (input.startsWith("deadline ")) {
-                    int index = input.indexOf("/");
-                    String name = input.substring(8, input.indexOf("/")).trim();
-                    String by = input.substring(index + 3).trim();
-                    Deadline deadline = new Deadline(name, by);
+                    Todo todo = new Todo(description);
+                    tasks[taskCount] = todo;
+                    taskCount++;
 
+                    System.out.println(divider
+                            + addtask
+                            + "  "
+                            + todo.toString()
+                            + "\n"
+                            + "Now you have " + taskCount + " tasks in the list. \n"
+                            + divider);
+
+                } else if (input.equals("deadline") || input.startsWith("deadline ")) {
+                    if (!input.contains("/by")) {
+                        throw new TTException(" OOPS!!! A deadline needs a '/by' date, e.g. deadline return book /by Sunday.");
+                    }
+
+                    int slash = input.indexOf("/");
+                    String name = input.substring(8, slash).trim();
+                    String by = input.substring(slash + 3).trim();
+
+                    if (name.isEmpty() || by.isEmpty()) {
+                        throw new TTException(" OOPS!!! The description or /by date of a deadline cannot be empty.");
+                    }
+
+                    Deadline deadline = new Deadline(name, by);
                     tasks[taskCount] = deadline;
                     taskCount++;
 
@@ -90,15 +98,27 @@ public class TT {
                             + "Now you have " + taskCount + " tasks in the list. \n"
                             + divider);
 
-                } else if (input.startsWith("event ")) {
+                } else if (input.equals("event") || input.startsWith("event ")) {
+                    if (!input.contains("/from") || !input.contains("/to")) {
+                        throw new TTException(" OOPS!!! An event needs both '/from' and '/to', e.g. event meeting /from Mon 2pm /to 4pm.");
+                    }
+
                     int firstSlash = input.indexOf("/");
                     int secondSlash = input.indexOf("/", firstSlash + 1);
+
+                    if (secondSlash == -1) {
+                        throw new TTException(" OOPS!!! An event needs both '/from' and '/to'.");
+                    }
 
                     String eventName = input.substring(5, firstSlash).trim();
                     String from = input.substring(firstSlash + 5, secondSlash - 1).trim();
                     String to = input.substring(secondSlash + 3).trim();
-                    Event event = new Event(eventName, from, to);
 
+                    if (eventName.isEmpty() || from.isEmpty() || to.isEmpty()) {
+                        throw new TTException(" OOPS!!! The description, /from, or /to of an event cannot be empty.");
+                    }
+
+                    Event event = new Event(eventName, from, to);
                     tasks[taskCount] = event;
                     taskCount++;
 
@@ -111,14 +131,29 @@ public class TT {
                             + divider);
 
                 } else {
-                    tasks[taskCount] = new Task(input);
-                    taskCount++;
-                    System.out.println(divider + "added : " + input + "\n" + divider);
+                    throw new TTException(" OOPS!!! I'm sorry, but I don't know what that means :-(");
                 }
-            }
 
+            } catch (TTException e) {
+                System.out.println(divider + e.getMessage() + "\n" + divider);
+            }
         }
 
         scanner.close();
+    }
+
+    private static int parseIndex(String numberPart, int taskCount) throws TTException {
+        int index;
+        try {
+            index = Integer.parseInt(numberPart.trim()) - 1;
+        } catch (NumberFormatException e) {
+            throw new TTException(" OOPS!!! Please enter a valid task number, e.g. mark 2.");
+        }
+
+        if (index < 0 || index >= taskCount) {
+            throw new TTException(" OOPS!!! That task number doesn't exist.");
+        }
+
+        return index;
     }
 }
