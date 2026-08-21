@@ -12,6 +12,7 @@ public class TT {
 
         String intro = "Hello! I'm TT.\n" + "What can I do for you?";
         String bye = "Bye. Hope to see you again soon!";
+        String addtask = "Got it. I've added this task: \n";
 
         System.out.println(divider);
         System.out.println(banner);
@@ -53,9 +54,67 @@ public class TT {
                 System.out.println(divider);
 
             } else {
-                tasks[taskCount] = new Task(input);
-                taskCount++;
-                System.out.println(divider + "added : " + input + "\n"+ divider);
+                if(input.startsWith("todo ")) {
+                    String description = input.substring(4).trim();
+
+                    if (description.isEmpty()) {
+                        throw new IllegalArgumentException("Todo description cannot be empty");
+
+                    } else {
+                        Todo todo = new Todo(input.substring(5));
+                        tasks[taskCount] = todo;
+                        taskCount++;
+                        System.out.println(divider
+                                + addtask
+                                + "  "
+                                + todo.toString()
+                                + "\n"
+                                + "Now you have " + taskCount + " tasks in the list. \n"
+                                + divider);
+                    }
+
+                } else if (input.startsWith("deadline ")) {
+                    int index = input.indexOf("/");
+                    String name = input.substring(8, input.indexOf("/")).trim();
+                    String by = input.substring(index + 3).trim();
+                    Deadline deadline = new Deadline(name, by);
+
+                    tasks[taskCount] = deadline;
+                    taskCount++;
+
+                    System.out.println(divider
+                            + addtask
+                            + "  "
+                            + deadline.toString()
+                            + "\n"
+                            + "Now you have " + taskCount + " tasks in the list. \n"
+                            + divider);
+
+                } else if (input.startsWith("event ")) {
+                    int firstSlash = input.indexOf("/");
+                    int secondSlash = input.indexOf("/", firstSlash + 1);
+
+                    String eventName = input.substring(5, firstSlash).trim();
+                    String from = input.substring(firstSlash + 5, secondSlash - 1).trim();
+                    String to = input.substring(secondSlash + 3).trim();
+                    Event event = new Event(eventName, from, to);
+
+                    tasks[taskCount] = event;
+                    taskCount++;
+
+                    System.out.println(divider
+                            + addtask
+                            + "  "
+                            + event.toString()
+                            + "\n"
+                            + "Now you have " + taskCount + " tasks in the list. \n"
+                            + divider);
+
+                } else {
+                    tasks[taskCount] = new Task(input);
+                    taskCount++;
+                    System.out.println(divider + "added : " + input + "\n" + divider);
+                }
             }
 
         }
