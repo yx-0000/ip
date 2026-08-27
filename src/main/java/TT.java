@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class TT {
     public static void main(String[] args) {
@@ -106,7 +108,13 @@ public class TT {
                         if (name.isEmpty() || by.isEmpty()) {
                             throw new TTException(" OOPS!!! The description or /by date of a deadline cannot be empty.");
                         }
-                        Deadline deadline = new Deadline(name, by);
+                        LocalDate deadlineDate;
+                        try {
+                            deadlineDate = LocalDate.parse(by);
+                        } catch (DateTimeParseException e) {
+                            throw new TTException(" OOPS!!! Please enter the deadline as yyyy-MM-dd, e.g. 2019-10-15.");
+                        }
+                        Deadline deadline = new Deadline(name, deadlineDate);
                         tasks.add(deadline);
                         storage.save(tasks);
                         System.out.println(divider
