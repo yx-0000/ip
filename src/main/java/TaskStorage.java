@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 /** Reads and writes TT tasks in a simple, human-readable text format. */
 public class TaskStorage {
@@ -12,7 +13,7 @@ public class TaskStorage {
 
     /** Creates storage using the application's relative data file. */
     public TaskStorage() {
-        this(Paths.get("data", "duke.txt"));
+        this(Paths.get("data", "TT.txt"));
     }
 
     /** Creates storage at the supplied path, primarily useful for tests. */
@@ -53,9 +54,18 @@ public class TaskStorage {
             ArrayList<String> lines = new ArrayList<>();
             for (Task task : tasks) {
                 String type = task instanceof Todo ? "T" : task instanceof Deadline ? "D" : "E";
-                String details = type.equals("D") ? ((Deadline) task).getBy()
-                        : type.equals("E") ? ((Event) task).getFrom() + "|" + ((Event) task).getTo() : "";
-                lines.add(type + "|" + (task.isDoneValue() ? "1" : "0") + "|" + task.getTask() + "|" + details);
+                String line = type + " | "
+                        + (task.isDoneValue() ? "1" : "0")
+                        + " | " + task.getTask();
+
+                if (task instanceof Deadline deadline) {
+                    line += " | " + deadline.getBy();
+                } else if (task instanceof Event event) {
+                    line += " | " + event.getFrom()
+                            + " | " + event.getTo();
+                }
+
+                lines.add(line);
             }
             Files.write(filePath, lines, StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -65,12 +75,15 @@ public class TaskStorage {
 
     private Task parse(String line) {
         String[] fields = line.split("\\|", -1);
+        for (int i = 0; i < fields.length; i++) {
+            fields[i] = fields[i].trim();
+        }
         if (fields.length < 3 || (fields[1].equals("0") == false && fields[1].equals("1") == false)) {
             throw new IllegalArgumentException();
         }
         Task task = switch (fields[0]) {
             case "T" -> new Todo(fields[2]);
-            case "D" -> fields.length >= 4 ? new Deadline(fields[2], fields[3]) : null;
+            case "D" -> fields.length >= 4 ? new Deadline(fields[2], LocalDate.parse(fields[3].trim())) : null;
             case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
             default -> null;
         };
