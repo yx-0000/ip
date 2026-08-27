@@ -25,6 +25,8 @@ public class TT {
         System.out.println(divider);
 
         ArrayList<Task> tasks = new ArrayList<>();
+        TaskStorage storage = new TaskStorage();
+        tasks.addAll(storage.load());
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -52,6 +54,7 @@ public class TT {
                     case MARK: {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).mark();
+                        storage.save(tasks);
                         System.out.println(divider + "Nice! I've marked this task as done: \n" + tasks.get(index).toString());
                         System.out.println(divider);
                         break;
@@ -60,6 +63,7 @@ public class TT {
                     case UNMARK: {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).unmark();
+                        storage.save(tasks);
                         System.out.println(divider + "OK, I've marked this task as not done yet: \n" + tasks.get(index).toString());
                         System.out.println(divider);
                         break;
@@ -68,6 +72,7 @@ public class TT {
                     case DELETE: {
                         int index = parseIndex(rest, tasks.size());
                         Task removed = tasks.remove(index);
+                        storage.save(tasks);
                         System.out.println(divider
                                 + "Noted. I've removed this task:\n"
                                 + "  " + removed.toString() + "\n"
@@ -82,6 +87,7 @@ public class TT {
                         }
                         Todo todo = new Todo(rest);
                         tasks.add(todo);
+                        storage.save(tasks);
                         System.out.println(divider
                                 + addtask
                                 + "  " + todo.toString() + "\n"
@@ -102,6 +108,7 @@ public class TT {
                         }
                         Deadline deadline = new Deadline(name, by);
                         tasks.add(deadline);
+                        storage.save(tasks);
                         System.out.println(divider
                                 + addtask
                                 + "  " + deadline.toString() + "\n"
@@ -127,6 +134,7 @@ public class TT {
                         }
                         Event event = new Event(eventName, from, to);
                         tasks.add(event);
+                        storage.save(tasks);
                         System.out.println(divider
                                 + addtask
                                 + "  " + event.toString() + "\n"
