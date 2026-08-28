@@ -1,8 +1,9 @@
 package tt;
 
-import tt.task.Task;
 import java.util.List;
 import java.util.Scanner;
+
+import tt.task.Task;
 
 /** Handles all communication between tt.TT and the user. */
 public class Ui {

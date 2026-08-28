@@ -1,13 +1,14 @@
 package tt;
 
-import tt.task.Event;
-import tt.task.Deadline;
-import tt.task.Todo;
-import tt.task.Task;
-import tt.storage.TaskStorage;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+
+import tt.storage.TaskStorage;
+import tt.task.Deadline;
+import tt.task.Event;
+import tt.task.Task;
+import tt.task.Todo;
 
 /** Starts the task manager and coordinates commands, storage, and the user interface. */
 public class TT {
@@ -73,19 +74,22 @@ public class TT {
 
                     case Command.DEADLINE: {
                         if (!rest.contains("/by")) {
-                            throw new TTException(" OOPS!!! A deadline needs a '/by' date, e.g. deadline return book /by Sunday.");
+                            throw new TTException(" OOPS!!! A deadline needs a '/by' date, e.g. "
+                                    + "deadline return book /by Sunday.");
                         }
                         int slash = rest.indexOf("/");
                         String name = rest.substring(0, slash).trim();
                         String by = rest.substring(slash + 3).trim();
                         if (name.isEmpty() || by.isEmpty()) {
-                            throw new TTException(" OOPS!!! The description or /by date of a deadline cannot be empty.");
+                            throw new TTException(" OOPS!!! The description or /by date of a deadline "
+                                    + "cannot be empty.");
                         }
                         LocalDate deadlineDate;
                         try {
                             deadlineDate = LocalDate.parse(by);
                         } catch (DateTimeParseException e) {
-                            throw new TTException(" OOPS!!! Please enter the deadline as yyyy-MM-dd, e.g. 2019-10-15.");
+                            throw new TTException(" OOPS!!! Please enter the deadline as yyyy-MM-dd, "
+                                    + "e.g. 2019-10-15.");
                         }
                         Deadline deadline = new Deadline(name, deadlineDate);
                         tasks.add(deadline);
@@ -96,7 +100,8 @@ public class TT {
 
                     case Command.EVENT: {
                         if (!rest.contains("/from") || !rest.contains("/to")) {
-                            throw new TTException(" OOPS!!! An event needs both '/from' and '/to', e.g. event meeting /from Mon 2pm /to 4pm.");
+                            throw new TTException(" OOPS!!! An event needs both '/from' and '/to', "
+                                    + "e.g. event meeting /from Mon 2pm /to 4pm.");
                         }
                         int firstSlash = rest.indexOf("/");
                         int secondSlash = rest.indexOf("/", firstSlash + 1);
@@ -107,7 +112,8 @@ public class TT {
                         String from = rest.substring(firstSlash + 5, secondSlash - 1).trim();
                         String to = rest.substring(secondSlash + 3).trim();
                         if (eventName.isEmpty() || from.isEmpty() || to.isEmpty()) {
-                            throw new TTException(" OOPS!!! The description, /from, or /to of an event cannot be empty.");
+                            throw new TTException(" OOPS!!! The description, /from, or /to of an event "
+                                    + "cannot be empty.");
                         }
                         Event event = new Event(eventName, from, to);
                         tasks.add(event);
