@@ -1,38 +1,18 @@
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 public class TT {
     public static void main(String[] args) {
 
-        String divider = "________________________________________ \n";
-        String banner = """
-                     --------  --------
-                         -        -
-                         -        -
-                         -        -
-                         -        -
-                         -        -
-                    """;
-
-
-        String intro = "Hello! I'm TT.\n" + "What can I do for you?";
-        String bye = "Bye. Hope to see you again soon!";
-        String addtask = "Got it. I've added this task: \n";
-
-        System.out.println(divider);
-        System.out.println(banner);
-        System.out.println(intro);
-        System.out.println(divider);
-
         ArrayList<Task> tasks = new ArrayList<>();
         TaskStorage storage = new TaskStorage();
         tasks.addAll(storage.load());
-        Scanner scanner = new Scanner(System.in);
+        Ui ui = new Ui();
+        ui.showWelcome();
 
         while (true) {
-            String input = scanner.nextLine();
+            String input = ui.readCommand();
             String commandWord = input.split(" ", 2)[0];
             String rest = input.contains(" ") ? input.substring(input.indexOf(' ') + 1).trim() : "";
             Command command = Command.fromString(commandWord);
@@ -40,25 +20,18 @@ public class TT {
             try {
                 switch (command) {
                     case BYE:
-                        System.out.println(divider + bye);
-                        System.out.println(divider);
-                        scanner.close();
+                        ui.showBye();
                         return;
 
                     case LIST:
-                        System.out.println(divider + "Here are the tasks in your list: ");
-                        for (int i = 0; i < tasks.size(); i++) {
-                            System.out.println((i + 1) + "." + tasks.get(i).toString());
-                        }
-                        System.out.println(divider);
+                        ui.showTasks(tasks);
                         break;
 
                     case MARK: {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).mark();
                         storage.save(tasks);
-                        System.out.println(divider + "Nice! I've marked this task as done: \n" + tasks.get(index).toString());
-                        System.out.println(divider);
+                        ui.showMarked(tasks.get(index), true);
                         break;
                     }
 
@@ -66,8 +39,7 @@ public class TT {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).unmark();
                         storage.save(tasks);
-                        System.out.println(divider + "OK, I've marked this task as not done yet: \n" + tasks.get(index).toString());
-                        System.out.println(divider);
+                        ui.showMarked(tasks.get(index), false);
                         break;
                     }
 
@@ -75,11 +47,7 @@ public class TT {
                         int index = parseIndex(rest, tasks.size());
                         Task removed = tasks.remove(index);
                         storage.save(tasks);
-                        System.out.println(divider
-                                + "Noted. I've removed this task:\n"
-                                + "  " + removed.toString() + "\n"
-                                + "Now you have " + tasks.size() + " tasks in the list.\n"
-                                + divider);
+                        ui.showDeleted(removed, tasks.size());
                         break;
                     }
 
@@ -90,11 +58,7 @@ public class TT {
                         Todo todo = new Todo(rest);
                         tasks.add(todo);
                         storage.save(tasks);
-                        System.out.println(divider
-                                + addtask
-                                + "  " + todo.toString() + "\n"
-                                + "Now you have " + tasks.size() + " tasks in the list. \n"
-                                + divider);
+                        ui.showAdded(todo, tasks.size());
                         break;
                     }
 
@@ -117,11 +81,7 @@ public class TT {
                         Deadline deadline = new Deadline(name, deadlineDate);
                         tasks.add(deadline);
                         storage.save(tasks);
-                        System.out.println(divider
-                                + addtask
-                                + "  " + deadline.toString() + "\n"
-                                + "Now you have " + tasks.size() + " tasks in the list. \n"
-                                + divider);
+                        ui.showAdded(deadline, tasks.size());
                         break;
                     }
 
@@ -143,11 +103,7 @@ public class TT {
                         Event event = new Event(eventName, from, to);
                         tasks.add(event);
                         storage.save(tasks);
-                        System.out.println(divider
-                                + addtask
-                                + "  " + event.toString() + "\n"
-                                + "Now you have " + tasks.size() + " tasks in the list. \n"
-                                + divider);
+                        ui.showAdded(event, tasks.size());
                         break;
                     }
 
@@ -157,7 +113,7 @@ public class TT {
                 }
 
             } catch (TTException e) {
-                System.out.println(divider + e.getMessage() + "\n" + divider);
+                ui.showError(e.getMessage());
             }
         }
     }
