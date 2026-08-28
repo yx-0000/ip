@@ -47,6 +47,15 @@ public class Ui {
         showDivider();
     }
 
+    /** Displays the tasks whose descriptions contain the search keyword. */
+    public void showMatchingTasks(List<Task> tasks) {
+        System.out.println(DIVIDER + "Here are the matching tasks in your list:");
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + "." + tasks.get(i));
+        }
+        showDivider();
+    }
+
     /** Displays the farewell message and closes standard input. */
     public void showBye() {
         System.out.println(DIVIDER + BYE);
