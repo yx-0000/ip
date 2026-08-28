@@ -3,6 +3,7 @@ package tt;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 import tt.storage.TaskStorage;
 import tt.task.Deadline;
@@ -35,6 +36,20 @@ public class TT {
 
                     case Command.LIST:
                         ui.showTasks(tasks);
+                        break;
+
+                    case Command.FIND:
+                        if (rest.isEmpty()) {
+                            throw new TTException(" OOPS!!! Please provide a keyword to search for, e.g. find book.");
+                        }
+                        ArrayList<Task> matchingTasks = new ArrayList<>();
+                        String keyword = rest.toLowerCase(Locale.ROOT);
+                        for (Task task : tasks) {
+                            if (task.getTask().toLowerCase(Locale.ROOT).contains(keyword)) {
+                                matchingTasks.add(task);
+                            }
+                        }
+                        ui.showMatchingTasks(matchingTasks);
                         break;
 
                     case Command.MARK: {
