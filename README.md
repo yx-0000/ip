@@ -1,6 +1,6 @@
 # tt.tt project template
 
-This is a project template for a greenfield Java project. It's named after the Java mascot _Duke_. Given below are instructions on how to use it.
+This is a project template for a greenfield Java project named _tt_. Given below are instructions on how to use it.
 
 ## Setting up in Intellij
 
@@ -23,3 +23,30 @@ Prerequisites: JDK 25, update Intellij to the most recent version.
    ```
 
 **Warning:** Keep the `src\main\java` folder as the root folder for Java files (i.e., don't rename those folders or move Java files to another folder outside of this folder path), as this is the default location some tools (e.g., Gradle) expect to find Java files.
+
+## JUnit testing
+
+JUnit tests should cover the approximately 50% highest-value methods in the codebase, prioritising core and complex behavior. Update the relevant JUnit tests after every code change so that this coverage target remains accurate.
+
+## Creating and running the executable JAR
+
+This project uses the [Shadow Gradle plugin](https://github.com/GradleUp/shadow) to create a fat JAR: an executable JAR containing the application and its runtime dependencies.
+
+1. Install and select JDK 25.
+2. Open a terminal in the project root (`C:\Users\yx\ip`).
+3. Run the following command:
+
+   ```text
+   .\gradlew.bat shadowJar
+   ```
+
+   On macOS or Linux, use `./gradlew shadowJar` instead.
+
+4. Find the generated file at `build/libs/tt.jar`.
+5. Copy `tt.jar` into an empty folder. Open a terminal in that folder and run:
+
+   ```text
+   java -jar "tt.jar"
+   ```
+
+The `shadowJar` task sets `tt.TT` as the entry point and packages all runtime dependencies, so no separate classpath or Gradle installation is needed to run the copied JAR. The generated JAR is ignored by Git through the existing `build/` rule and should be uploaded as a binary attachment to a GitHub release rather than committed.
