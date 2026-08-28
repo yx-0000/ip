@@ -46,12 +46,14 @@ public class Ui {
         showDivider();
     }
 
+    /** Displays the farewell message and closes standard input. */
     public void showBye() {
         System.out.println(DIVIDER + BYE);
         showDivider();
         scanner.close();
     }
 
+    /** Displays confirmation that a task was marked or unmarked. */
     public void showMarked(Task task, boolean isDone) {
         String message = isDone
                 ? "Nice! I've marked this task as done: \n"
@@ -59,16 +61,19 @@ public class Ui {
         System.out.println(DIVIDER + message + task + "\n" + DIVIDER);
     }
 
+    /** Displays confirmation that a task was deleted. */
     public void showDeleted(Task task, int remaining) {
         System.out.println(DIVIDER + "Noted. I've removed this task:\n  " + task
                 + "\nNow you have " + remaining + " tasks in the list.\n" + DIVIDER);
     }
 
+    /** Displays confirmation that a task was added. */
     public void showAdded(Task task, int total) {
         System.out.println(DIVIDER + ADD_TASK + "  " + task
                 + "\nNow you have " + total + " tasks in the list. \n" + DIVIDER);
     }
 
+    /** Displays an error message without terminating the application. */
     public void showError(String message) {
         System.out.println(DIVIDER + message + "\n" + DIVIDER);
     }
