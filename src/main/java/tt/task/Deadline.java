@@ -10,6 +10,7 @@ public class Deadline extends Task {
             DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH);
     private final LocalDate by;
 
+    /** Creates an incomplete deadline for the supplied date. */
     public Deadline(String name, LocalDate by) {
         super(name);
         this.by = by;
@@ -27,6 +28,7 @@ public class Deadline extends Task {
     public String getFormattedBy() { return by.format(DISPLAY_FORMAT); }
 
     @Override
+    /** Returns the deadline with its type marker, status, and formatted date. */
     public String toString() {
         return "[D]" + super.toString() + " (by: " + getFormattedBy() + ")";
     }

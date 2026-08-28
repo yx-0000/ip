@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+/** Starts the task manager and coordinates commands, storage, and the user interface. */
 public class TT {
+    /** Runs the interactive task manager until the user enters {@code bye}. */
     public static void main(String[] args) {
 
         ArrayList<Task> tasks = new ArrayList<>();
@@ -125,6 +127,7 @@ public class TT {
         }
     }
 
+    /** Converts a one-based task number into a valid zero-based list index. */
     private static int parseIndex(String numberPart, int taskCount) throws TTException {
         int index;
         try {
