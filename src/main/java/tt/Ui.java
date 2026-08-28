@@ -1,7 +1,9 @@
+package tt;
+
 import java.util.List;
 import java.util.Scanner;
 
-/** Handles all communication between TT and the user. */
+/** Handles all communication between tt.TT and the user. */
 public class Ui {
     private static final String DIVIDER = "________________________________________ \n";
     private static final String BANNER = """
@@ -25,7 +27,7 @@ public class Ui {
     public void showWelcome() {
         System.out.println(DIVIDER);
         System.out.println(BANNER);
-        System.out.println("Hello! I'm TT.\nWhat can I do for you?");
+        System.out.println("Hello! I'm tt.TT.\nWhat can I do for you?");
         System.out.println(DIVIDER);
     }
 

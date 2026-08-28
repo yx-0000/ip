@@ -1,3 +1,10 @@
+package tt.storage;
+
+import tt.task.Deadline;
+import tt.task.Event;
+import tt.task.Task;
+import tt.task.Todo;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -7,13 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 
-/** Reads and writes TT tasks in a simple, human-readable text format. */
+/** Reads and writes tt.TT tasks in a simple, human-readable text format. */
 public class TaskStorage {
     private final Path filePath;
 
     /** Creates storage using the application's relative data file. */
     public TaskStorage() {
-        this(Paths.get("data", "TT.txt"));
+        this(Paths.get("data", "tt.TT.txt"));
     }
 
     /** Creates storage at the supplied path, primarily useful for tests. */
