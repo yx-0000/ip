@@ -1,3 +1,5 @@
+package tt;
+
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -19,15 +21,15 @@ public class TT {
 
             try {
                 switch (command) {
-                    case BYE:
+                    case Command.BYE:
                         ui.showBye();
                         return;
 
-                    case LIST:
+                    case Command.LIST:
                         ui.showTasks(tasks);
                         break;
 
-                    case MARK: {
+                    case Command.MARK: {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).mark();
                         storage.save(tasks);
@@ -35,7 +37,7 @@ public class TT {
                         break;
                     }
 
-                    case UNMARK: {
+                    case Command.UNMARK: {
                         int index = parseIndex(rest, tasks.size());
                         tasks.get(index).unmark();
                         storage.save(tasks);
@@ -43,7 +45,7 @@ public class TT {
                         break;
                     }
 
-                    case DELETE: {
+                    case Command.DELETE: {
                         int index = parseIndex(rest, tasks.size());
                         Task removed = tasks.remove(index);
                         storage.save(tasks);
@@ -51,7 +53,7 @@ public class TT {
                         break;
                     }
 
-                    case TODO: {
+                    case Command.TODO: {
                         if (rest.isEmpty()) {
                             throw new TTException(" OOPS!!! The description of a todo cannot be empty.");
                         }
@@ -62,7 +64,7 @@ public class TT {
                         break;
                     }
 
-                    case DEADLINE: {
+                    case Command.DEADLINE: {
                         if (!rest.contains("/by")) {
                             throw new TTException(" OOPS!!! A deadline needs a '/by' date, e.g. deadline return book /by Sunday.");
                         }
@@ -85,7 +87,7 @@ public class TT {
                         break;
                     }
 
-                    case EVENT: {
+                    case Command.EVENT: {
                         if (!rest.contains("/from") || !rest.contains("/to")) {
                             throw new TTException(" OOPS!!! An event needs both '/from' and '/to', e.g. event meeting /from Mon 2pm /to 4pm.");
                         }
@@ -107,7 +109,7 @@ public class TT {
                         break;
                     }
 
-                    case UNKNOWN:
+                    case Command.UNKNOWN:
                     default:
                         throw new TTException(" OOPS!!! I'm sorry, but I don't know what that means :-(");
                 }

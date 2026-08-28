@@ -1,4 +1,6 @@
-public class Todo extends Task{
+package tt.task;
+
+public class Todo extends Task {
 
     public Todo(String todo) {
         super(todo);
