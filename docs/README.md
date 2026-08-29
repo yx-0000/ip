@@ -17,7 +17,8 @@ Example: `deadline Return library book /by 2026-09-15`
 // A description of the expected outcome goes here
 
 ```
-expected output
+Got it. I've added this task:
+  Return library book (by: Sep 15 2026)
 ```
 
 ## Feature ABC
