@@ -10,7 +10,7 @@ Welcome to tt.tt, a lightweight task manager that helps you organise your tasks 
 
 Add a deadline to a task by including a date in the format `YYYY-MM-DD`. This helps you keep track of tasks that need to be completed by a specific date.
 
-// Give examples of usage
+Use the `deadline` command followed by a task description and date to record when the task is due.
 
 Example: `keyword (optional arguments)`
 
