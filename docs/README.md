@@ -12,7 +12,7 @@ Add a deadline to a task by including a date in the format `YYYY-MM-DD`. This he
 
 Use the `deadline` command followed by a task description and date to record when the task is due.
 
-Example: `keyword (optional arguments)`
+Example: `deadline Return library book /by 2026-09-15`
 
 // A description of the expected outcome goes here
 
