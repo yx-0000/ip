@@ -8,7 +8,7 @@ Welcome to tt.tt, a lightweight task manager that helps you organise your tasks 
 
 ## Adding deadlines
 
-// Describe the action and its outcome.
+Add a deadline to a task by including a date in the format `YYYY-MM-DD`. This helps you keep track of tasks that need to be completed by a specific date.
 
 // Give examples of usage
 
