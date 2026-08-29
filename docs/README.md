@@ -4,7 +4,7 @@
 
 // Product screenshot goes here
 
-// Product intro goes here
+Welcome to tt.tt, a lightweight task manager that helps you organise your tasks and deadlines.
 
 ## Adding deadlines
 
