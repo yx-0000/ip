@@ -80,6 +80,11 @@ public class TaskStorage {
         }
     }
 
+    /** Saves the supplied tasks, providing a concise API for a small number of tasks. */
+    public void save(Task... tasks) {
+        save(List.of(tasks));
+    }
+
     private Task parse(String line) {
         String[] fields = line.split("\\|", -1);
         for (int i = 0; i < fields.length; i++) {
