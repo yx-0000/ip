@@ -33,6 +33,8 @@ dependencies {
 
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jUnitVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
+    implementation "org.openjfx:javafx-base:${javafxVersion}:${javafxPlatform}"
+    implementation "org.openjfx:javafx-graphics:${javafxVersion}:${javafxPlatform}"
     implementation "org.openjfx:javafx-controls:${javafxVersion}:${javafxPlatform}"
 }
 
@@ -51,7 +53,7 @@ test {
 }
 
 application {
-    mainClass = 'tt.TT'
+    mainClass = 'tt.Launcher'
 }
 
 jar {
