@@ -1,18 +1,19 @@
 package tt.storage;
 
-import tt.task.Deadline;
-import tt.task.Event;
-import tt.task.Task;
-import tt.task.Todo;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
+
+import tt.task.Deadline;
+import tt.task.Event;
+import tt.task.Task;
+import tt.task.Todo;
 
 /** Reads and writes tt.TT tasks in a simple, human-readable text format. */
 public class TaskStorage {
@@ -41,7 +42,7 @@ public class TaskStorage {
                     if (task != null) {
                         tasks.add(task);
                     }
-                } catch (IllegalArgumentException ignored) {
+                } catch (IllegalArgumentException | DateTimeParseException ignored) {
                     // Ignore malformed lines so one corrupted task does not lose all data.
                 }
             }

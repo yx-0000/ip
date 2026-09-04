@@ -20,6 +20,6 @@ public class Event extends Task {
     @Override
     /** Returns the event with its type marker, status, and time range. */
     public String toString() {
-        return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";
+        return "[E]" + super.toString() + " (from: " + from + " to " + to + ")";
     }
 }
