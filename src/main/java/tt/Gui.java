@@ -74,6 +74,12 @@ public class Gui extends Application {
             return;
         }
 
+        if (input.equalsIgnoreCase("clear")) {
+            dialogContainer.getChildren().clear();
+            userInput.clear();
+            return;
+        }
+
         dialogContainer.getChildren().addAll(
                 DialogBox.getUserDialog(input),
                 DialogBox.getBotDialog(taskManager.getResponse(input)));

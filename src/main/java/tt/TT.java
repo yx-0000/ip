@@ -54,6 +54,7 @@ public class TT {
             case MARK -> setDone(rest, true);
             case UNMARK -> setDone(rest, false);
             case DELETE -> deleteTask(rest);
+            case CLEAR -> clearTasks(rest);
             case TODO -> addTodo(rest);
             case DEADLINE -> addDeadline(rest);
             case EVENT -> addEvent(rest);
@@ -96,6 +97,35 @@ public class TT {
         storage.save(tasks);
         return "Noted. I've removed this task:\n" + removedTask
                 + "\nNow you have " + tasks.size() + " tasks in the list.";
+    }
+
+    private String clearTasks(String taskTypeText) throws TTException {
+        String taskType = taskTypeText.toLowerCase(Locale.ROOT);
+        int originalTaskCount = tasks.size();
+
+        switch (taskType) {
+            case "todo", "todos" -> tasks.removeIf(task -> task instanceof Todo);
+            case "deadline", "deadlines" -> tasks.removeIf(task -> task instanceof Deadline);
+            case "event", "events" -> tasks.removeIf(task -> task instanceof Event);
+            case "all", "task", "tasks" -> tasks.clear();
+            case "" -> throw new TTException("OOPS!!! To clear tasks, use clear todo, clear deadline, "
+                    + "clear event, or clear all.");
+            default -> throw new TTException("OOPS!!! I can only clear todo, deadline, event, or all tasks.");
+        }
+
+        int clearedTaskCount = originalTaskCount - tasks.size();
+        storage.save(tasks);
+        return "Cleared " + clearedTaskCount + " " + getClearDescription(taskType, clearedTaskCount) + ".";
+    }
+
+    private String getClearDescription(String taskType, int clearedTaskCount) {
+        String description = switch (taskType) {
+            case "todo", "todos" -> "todo task";
+            case "deadline", "deadlines" -> "deadline task";
+            case "event", "events" -> "event task";
+            default -> "task";
+        };
+        return clearedTaskCount == 1 ? description : description + "s";
     }
 
     private String addTodo(String description) throws TTException {
