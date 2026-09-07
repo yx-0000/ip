@@ -52,4 +52,19 @@ class TTTest {
         assertEquals("Cleared 2 tasks.", taskManager.getResponse("clear all"));
         assertTrue(taskManager.getResponse("list").contains("There are no tasks to show."));
     }
+
+    @Test
+    void findTasks_matchingDescriptions_returnsOnlyCaseInsensitiveMatches() {
+        TaskStorage storage = new TaskStorage(temporaryDirectory.resolve("tasks.txt"));
+        TT taskManager = new TT(storage);
+        taskManager.getResponse("todo read book");
+        taskManager.getResponse("todo buy milk");
+        taskManager.getResponse("deadline return book /by 2026-09-10");
+
+        String matchingTasks = taskManager.getResponse("find BOOK");
+
+        assertTrue(matchingTasks.contains("read book"));
+        assertTrue(matchingTasks.contains("return book"));
+        assertFalse(matchingTasks.contains("buy milk"));
+    }
 }
