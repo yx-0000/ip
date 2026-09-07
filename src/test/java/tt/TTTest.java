@@ -2,6 +2,7 @@ package tt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -14,6 +15,11 @@ import tt.storage.TaskStorage;
 class TTTest {
     @TempDir
     private Path temporaryDirectory;
+
+    @Test
+    void constructor_nullStorage_throwsAssertionError() {
+        assertThrows(AssertionError.class, () -> new TT(null));
+    }
 
     @Test
     void clearTasks_validTaskTypes_removesOnlyMatchingTasks() {
