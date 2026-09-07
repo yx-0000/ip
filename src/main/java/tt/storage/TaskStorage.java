@@ -61,19 +61,7 @@ public class TaskStorage {
             }
             ArrayList<String> lines = new ArrayList<>();
             for (Task task : tasks) {
-                String type = task instanceof Todo ? "T" : task instanceof Deadline ? "D" : "E";
-                String line = type + " | "
-                        + (task.isDoneValue() ? "1" : "0")
-                        + " | " + task.getTask();
-
-                if (task instanceof Deadline deadline) {
-                    line += " | " + deadline.getBy();
-                } else if (task instanceof Event event) {
-                    line += " | " + event.getFrom()
-                            + " | " + event.getTo();
-                }
-
-                lines.add(line);
+                lines.add(serialize(task));
             }
             Files.write(filePath, lines, StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -91,7 +79,7 @@ public class TaskStorage {
         for (int i = 0; i < fields.length; i++) {
             fields[i] = fields[i].trim();
         }
-        if (fields.length < 3 || (fields[1].equals("0") == false && fields[1].equals("1") == false)) {
+        if (fields.length < 3 || !isValidCompletionStatus(fields[1])) {
             throw new IllegalArgumentException();
         }
         Task task = switch (fields[0]) {
@@ -107,5 +95,34 @@ public class TaskStorage {
             task.mark();
         }
         return task;
+    }
+
+    private boolean isValidCompletionStatus(String status) {
+        return status.equals("0") || status.equals("1");
+    }
+
+    private String serialize(Task task) {
+        String line = getTaskTypeCode(task) + " | "
+                + (task.isDone() ? "1" : "0")
+                + " | " + task.getTask();
+
+        if (task instanceof Deadline deadline) {
+            line += " | " + deadline.getBy();
+        } else if (task instanceof Event event) {
+            line += " | " + event.getFrom()
+                    + " | " + event.getTo();
+        }
+        return line;
+    }
+
+    private String getTaskTypeCode(Task task) {
+        if (task instanceof Todo) {
+            return "T";
+        } else if (task instanceof Deadline) {
+            return "D";
+        } else if (task instanceof Event) {
+            return "E";
+        }
+        throw new IllegalArgumentException("Unsupported task type: " + task.getClass().getName());
     }
 }
