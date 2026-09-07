@@ -24,8 +24,10 @@ public class TT {
 
     /** Creates a task manager backed by the supplied storage. */
     public TT(TaskStorage storage) {
+        assert storage != null : "Storage must not be null";
         this.storage = storage;
         tasks = storage.load();
+        assert tasks != null : "Storage must return a task list";
     }
 
     /** Processes one user command and returns the chatbot's response. */
@@ -48,6 +50,9 @@ public class TT {
     }
 
     private String execute(Command command, String rest) throws TTException {
+        assert command != null : "Command must not be null";
+        assert rest != null : "Command arguments must not be null";
+
         return switch (command) {
             case BYE -> "Bye. Hope to see you again soon!";
             case LIST -> formatTasks(tasks, "Here are the tasks in your list:");
@@ -171,6 +176,8 @@ public class TT {
     }
 
     private String addTask(Task task) {
+        assert task != null : "Task to add must not be null";
+
         tasks.add(task);
         storage.save(tasks);
         return "Got it. I've added this task:\n" + task
@@ -178,6 +185,9 @@ public class TT {
     }
 
     private String formatTasks(List<Task> tasksToFormat, String heading) {
+        assert tasksToFormat != null : "Task list to format must not be null";
+        assert heading != null && !heading.isBlank() : "Task list heading must not be blank";
+
         if (tasksToFormat.isEmpty()) {
             return heading + "\nThere are no tasks to show.";
         }
@@ -200,6 +210,7 @@ public class TT {
         if (index < 0 || index >= taskCount) {
             throw new TTException("OOPS!!! That task number doesn't exist.");
         }
+        assert index >= 0 && index < taskCount : "Parsed task index must be within bounds";
         return index;
     }
 }
