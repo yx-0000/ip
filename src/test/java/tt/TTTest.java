@@ -14,7 +14,7 @@ import tt.storage.TaskStorage;
 
 class TTTest {
     @TempDir
-    Path temporaryDirectory;
+    private Path temporaryDirectory;
 
     @Test
     void constructor_nullStorage_throwsAssertionError() {
