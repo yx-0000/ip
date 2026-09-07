@@ -2,7 +2,7 @@ package tt.task;
 
 /** The base representation of a task and its completion state. */
 public class Task {
-    private String name;
+    private final String name;
     private boolean isDone;
 
     /** Creates an incomplete task with the supplied description. */
@@ -16,29 +16,29 @@ public class Task {
         return name;
     }
 
-    /** Returns {@code X} when complete, otherwise a blank marker. */
-    public String isDone() {
+    /** Returns {@code X} when complete, otherwise a blank status marker. */
+    public String getStatusIcon() {
         return isDone ? "X" : " ";
     }
 
     /** Returns whether the task is complete. */
-    public boolean isDoneValue() {
+    public boolean isDone() {
         return isDone;
     }
 
     /** Marks the task as complete. */
     public void mark() {
-        this.isDone = true;
+        isDone = true;
     }
 
     /** Marks the task as incomplete. */
     public void unmark() {
-        this.isDone = false;
+        isDone = false;
     }
 
-    @Override
     /** Returns the task in the format displayed by the user interface. */
+    @Override
     public String toString() {
-        return "[" + isDone() + "] " + name;
+        return "[" + getStatusIcon() + "] " + name;
     }
 }

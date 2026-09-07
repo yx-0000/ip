@@ -8,8 +8,8 @@ public class Todo extends Task {
         super(todo);
     }
 
-    @Override
     /** Returns the todo with its type marker and completion state. */
+    @Override
     public String toString() {
         return "[T]" + super.toString();
     }

@@ -22,13 +22,17 @@ public class Deadline extends Task {
     }
 
     /** Returns the deadline as a date suitable for comparisons and calculations. */
-    public LocalDate getBy() { return by; }
+    public LocalDate getBy() {
+        return by;
+    }
 
     /** Returns the date in the format shown to the user. */
-    public String getFormattedBy() { return by.format(DISPLAY_FORMAT); }
+    public String getFormattedBy() {
+        return by.format(DISPLAY_FORMAT);
+    }
 
-    @Override
     /** Returns the deadline with its type marker, status, and formatted date. */
+    @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: " + getFormattedBy() + ")";
     }
