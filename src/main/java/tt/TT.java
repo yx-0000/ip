@@ -3,6 +3,7 @@ package tt;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import tt.storage.TaskStorage;
@@ -68,12 +69,9 @@ public class TT {
         }
 
         String keyword = keywordText.toLowerCase(Locale.ROOT);
-        ArrayList<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.getTask().toLowerCase(Locale.ROOT).contains(keyword)) {
-                matchingTasks.add(task);
-            }
-        }
+        List<Task> matchingTasks = tasks.stream()
+                .filter(task -> task.getTask().toLowerCase(Locale.ROOT).contains(keyword))
+                .toList();
         return formatTasks(matchingTasks, "Here are the matching tasks in your list:");
     }
 
@@ -179,7 +177,7 @@ public class TT {
                 + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
-    private String formatTasks(ArrayList<Task> tasksToFormat, String heading) {
+    private String formatTasks(List<Task> tasksToFormat, String heading) {
         if (tasksToFormat.isEmpty()) {
             return heading + "\nThere are no tasks to show.";
         }
