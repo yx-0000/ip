@@ -67,4 +67,35 @@ class TTTest {
         assertTrue(matchingTasks.contains("return book"));
         assertFalse(matchingTasks.contains("buy milk"));
     }
+
+    @Test
+    void sortTasks_mixedCaseDescriptions_sortsAndPersistsAlphabetically() {
+        TaskStorage storage = new TaskStorage(temporaryDirectory.resolve("tasks.txt"));
+        TT taskManager = new TT(storage);
+        taskManager.getResponse("todo write report");
+        taskManager.getResponse("todo Buy milk");
+        taskManager.getResponse("todo call Alice");
+
+        assertEquals("""
+                Here are your tasks sorted alphabetically:
+                1. [T][ ] Buy milk
+                2. [T][ ] call Alice
+                3. [T][ ] write report""", taskManager.getResponse("sort"));
+
+        TT reloadedTaskManager = new TT(storage);
+        assertEquals("""
+                Here are the tasks in your list:
+                1. [T][ ] Buy milk
+                2. [T][ ] call Alice
+                3. [T][ ] write report""", reloadedTaskManager.getResponse("list"));
+    }
+
+    @Test
+    void sortTasks_additionalArguments_returnsError() {
+        TaskStorage storage = new TaskStorage(temporaryDirectory.resolve("tasks.txt"));
+        TT taskManager = new TT(storage);
+
+        assertEquals("OOPS!!! The sort command does not take additional arguments.",
+                taskManager.getResponse("sort deadline"));
+    }
 }
