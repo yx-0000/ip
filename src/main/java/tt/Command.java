@@ -4,7 +4,7 @@ import java.util.Locale;
 
 /** Represents the commands understood by the task manager. */
 public enum Command {
-    BYE, LIST, FIND, MARK, UNMARK, DELETE, CLEAR, TODO, DEADLINE, EVENT, UNKNOWN;
+    BYE, LIST, FIND, SORT, MARK, UNMARK, DELETE, CLEAR, TODO, DEADLINE, EVENT, UNKNOWN;
 
     /** Converts user input into a command, or {@link #UNKNOWN} if it is unsupported. */
     public static Command fromString(String commandWord) {

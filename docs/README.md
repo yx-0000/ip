@@ -21,6 +21,26 @@ Got it. I've added this task:
   Return library book (by: Sep 15 2026)
 ```
 
+## Sorting tasks
+
+Use `sort` to arrange every task alphabetically by its description. Sorting ignores capitalization and saves the new
+order, so your tasks remain sorted the next time you open tt.TT.
+
+For example, if your tasks are `write report`, `Buy milk`, and `call Alice`, enter:
+
+```text
+sort
+```
+
+tt.TT responds with:
+
+```text
+Here are your tasks sorted alphabetically:
+1. [T][ ] Buy milk
+2. [T][ ] call Alice
+3. [T][ ] write report
+```
+
 ## Feature ABC
 
 // Feature details

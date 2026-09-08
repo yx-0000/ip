@@ -3,6 +3,7 @@ package tt;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -57,6 +58,7 @@ public class TT {
             case BYE -> "Bye. Hope to see you again soon!";
             case LIST -> formatTasks(tasks, "Here are the tasks in your list:");
             case FIND -> findTasks(rest);
+            case SORT -> sortTasks(rest);
             case MARK -> setDone(rest, true);
             case UNMARK -> setDone(rest, false);
             case DELETE -> deleteTask(rest);
@@ -78,6 +80,16 @@ public class TT {
                 .filter(task -> task.getTask().toLowerCase(Locale.ROOT).contains(keyword))
                 .toList();
         return formatTasks(matchingTasks, "Here are the matching tasks in your list:");
+    }
+
+    private String sortTasks(String arguments) throws TTException {
+        if (!arguments.isEmpty()) {
+            throw new TTException("OOPS!!! The sort command does not take additional arguments.");
+        }
+
+        tasks.sort(Comparator.comparing(Task::getTask, String.CASE_INSENSITIVE_ORDER));
+        storage.save(tasks);
+        return formatTasks(tasks, "Here are your tasks sorted alphabetically:");
     }
 
     private String setDone(String numberText, boolean isDone) throws TTException {
