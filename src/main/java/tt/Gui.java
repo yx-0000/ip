@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -77,6 +78,7 @@ public class Gui extends Application {
         userInput.setPromptText("Enter a command...");
         userInput.setOnAction(event -> handleUserInput());
         sendButton.setDefaultButton(true);
+        sendButton.setTooltip(new Tooltip("Send command (Enter)"));
         sendButton.setOnAction(event -> handleUserInput());
 
         HBox inputArea = new HBox(10, userInput, sendButton);
