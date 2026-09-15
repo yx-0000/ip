@@ -160,8 +160,8 @@ public class TT {
         }
 
         String message = isDone
-                ? "Nice! I've marked this task as done:\n"
-                : "OK, I've marked this task as not done yet:\n";
+                ? "Timeline win! I've marked this task as done:\n"
+                : "Back in motion—I've marked this task as not done yet:\n";
         return message + task;
     }
 
