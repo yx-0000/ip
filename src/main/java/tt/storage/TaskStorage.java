@@ -18,16 +18,24 @@ import tt.task.Event;
 import tt.task.Task;
 import tt.task.Todo;
 
-/** Reads and writes tt.TT tasks in a simple, human-readable text format. */
+/**
+ * Reads and writes tt.TT tasks in a simple, human-readable text format.
+ */
 public class TaskStorage {
     private final Path filePath;
 
-    /** Creates storage using the application's relative data file. */
+    /**
+     * Creates storage using the application's relative data file.
+     */
     public TaskStorage() {
         this(Paths.get("data", "tt.TT.txt"));
     }
 
-    /** Creates storage at the supplied path, primarily useful for tests. */
+    /**
+     * Creates storage at the supplied path, primarily useful for tests.
+     *
+     * @param filePath location of the task data file.
+     */
     public TaskStorage(Path filePath) {
         this.filePath = Objects.requireNonNull(filePath);
     }
@@ -35,7 +43,8 @@ public class TaskStorage {
     /**
      * Loads all tasks, returning an empty list when the save file is absent.
      *
-     * @throws StorageException if the file cannot be read or contains invalid data
+     * @return tasks loaded from the save file.
+     * @throws StorageException if the file cannot be read or contains invalid data.
      */
     public ArrayList<Task> load() {
         ArrayList<Task> tasks = new ArrayList<>();
@@ -62,7 +71,8 @@ public class TaskStorage {
     /**
      * Saves the complete task list, creating its parent directory when necessary.
      *
-     * @throws StorageException if the tasks cannot be written
+     * @param tasks complete task list to save.
+     * @throws StorageException if the tasks cannot be written.
      */
     public void save(List<Task> tasks) {
         Objects.requireNonNull(tasks);
@@ -98,7 +108,11 @@ public class TaskStorage {
         }
     }
 
-    /** Saves the supplied tasks, providing a concise API for a small number of tasks. */
+    /**
+     * Saves the supplied tasks, providing a concise API for a small number of tasks.
+     *
+     * @param tasks tasks to save.
+     */
     public void save(Task... tasks) {
         save(List.of(tasks));
     }

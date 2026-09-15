@@ -60,7 +60,8 @@ class TaskStorageTest {
                 "E | 0 | valid event | 10am | 11am",
                 "not a valid record"));
 
-        StorageException exception = assertThrows(StorageException.class, () -> new TaskStorage(saveFile).load());
+        StorageException exception = assertThrows(StorageException.class,
+                () -> new TaskStorage(saveFile).load());
 
         assertTrue(exception.getMessage().contains("line 4"));
     }

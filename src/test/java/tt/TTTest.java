@@ -78,14 +78,14 @@ class TTTest {
         taskManager.getResponse("todo call Alice");
 
         assertEquals("""
-                Your timeline is now sorted alphabetically:
+                Tasks sorted alphabetically:
                 1. [T][ ] Buy milk
                 2. [T][ ] call Alice
                 3. [T][ ] write report""", taskManager.getResponse("sort"));
 
         TT reloadedTaskManager = new TT(storage);
         assertEquals("""
-                Here's everything on your timeline:
+                Here are the tasks in your list:
                 1. [T][ ] Buy milk
                 2. [T][ ] call Alice
                 3. [T][ ] write report""", reloadedTaskManager.getResponse("list"));
@@ -96,7 +96,7 @@ class TTTest {
         TaskStorage storage = new TaskStorage(temporaryDirectory.resolve("tasks.txt"));
         TT taskManager = new TT(storage);
 
-        assertEquals("That task slipped through the timeline: the sort command does not take extra details.",
+        assertEquals("I couldn't process that: the sort command does not take extra details.",
                 taskManager.getResponse("sort deadline"));
     }
 
@@ -183,11 +183,11 @@ class TTTest {
     }
 
     @Test
-    void successfulCommands_useTimelinePersonality() {
+    void successfulCommands_useClearTaskFocusedWording() {
         TT taskManager = new TT(new TaskStorage(temporaryDirectory.resolve("tasks.txt")));
 
-        assertTrue(taskManager.getResponse("todo read book").startsWith("Locked into the timeline:"));
-        assertEquals("Timeline tucked away. Bye for now!", taskManager.getResponse("bye"));
+        assertTrue(taskManager.getResponse("todo read book").startsWith("Got it. I've added this task:"));
+        assertEquals("Bye. Hope to see you again soon!", taskManager.getResponse("bye"));
     }
 
     @Test

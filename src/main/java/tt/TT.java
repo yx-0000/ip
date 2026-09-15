@@ -16,22 +16,30 @@ import tt.task.Event;
 import tt.task.Task;
 import tt.task.Todo;
 
-/** Processes task-management commands and generates user-facing responses. */
+/**
+ * Processes task-management commands and generates user-facing responses.
+ */
 public class TT {
-    private static final Pattern DEADLINE_SEPARATOR = Pattern.compile("(?<!\\S)/by(?!\\S)");
-    private static final Pattern EVENT_FROM_SEPARATOR = Pattern.compile("(?<!\\S)/from(?!\\S)");
-    private static final Pattern EVENT_TO_SEPARATOR = Pattern.compile("(?<!\\S)/to(?!\\S)");
-    private static final String ERROR_PREFIX = "That task slipped through the timeline: ";
+    private static final String MESSAGE_ERROR_PREFIX = "I couldn't process that: ";
+    private static final Pattern SEPARATOR_DEADLINE = Pattern.compile("(?<!\\S)/by(?!\\S)");
+    private static final Pattern SEPARATOR_EVENT_FROM = Pattern.compile("(?<!\\S)/from(?!\\S)");
+    private static final Pattern SEPARATOR_EVENT_TO = Pattern.compile("(?<!\\S)/to(?!\\S)");
     private final ArrayList<Task> tasks;
     private final TaskStorage storage;
     private String storageError;
 
-    /** Creates a task manager backed by the default save file. */
+    /**
+     * Creates a task manager backed by the default save file.
+     */
     public TT() {
         this(new TaskStorage());
     }
 
-    /** Creates a task manager backed by the supplied storage. */
+    /**
+     * Creates a task manager backed by the supplied storage.
+     *
+     * @param storage storage used to load and save tasks.
+     */
     public TT(TaskStorage storage) {
         assert storage != null : "Storage must not be null";
         this.storage = storage;
@@ -46,20 +54,27 @@ public class TT {
         assert tasks != null : "Storage must return a task list";
     }
 
-    /** Processes one user command and returns the chatbot's response. */
+    /**
+     * Processes one user command and returns the chatbot's response.
+     *
+     * @param input command entered by the user.
+     * @return user-facing response to the command.
+     */
     public String getResponse(String input) {
         return getCommandResult(input).message();
     }
 
-    /** Processes one command and includes whether its response represents an error. */
+    /**
+     * Processes one command and includes whether its response represents an error.
+     */
     CommandResult getCommandResult(String input) {
         if (input == null) {
-            return CommandResult.error(ERROR_PREFIX + "please enter a command.");
+            return CommandResult.error(MESSAGE_ERROR_PREFIX + "please enter a command.");
         }
 
         String trimmedInput = input.strip();
         if (trimmedInput.isEmpty()) {
-            return CommandResult.error(ERROR_PREFIX + "please enter a command.");
+            return CommandResult.error(MESSAGE_ERROR_PREFIX + "please enter a command.");
         }
 
         String[] commandParts = trimmedInput.split("\\s+", 2);
@@ -76,14 +91,16 @@ public class TT {
         try {
             return CommandResult.success(execute(command, arguments));
         } catch (TTException e) {
-            return CommandResult.error(ERROR_PREFIX + e.getMessage());
+            return CommandResult.error(MESSAGE_ERROR_PREFIX + e.getMessage());
         } catch (StorageException e) {
             storageError = e.getMessage();
             return CommandResult.error(getStorageErrorMessage());
         }
     }
 
-    /** Returns a startup storage warning, or {@code null} when storage loaded successfully. */
+    /**
+     * Returns a startup storage warning, or {@code null} when storage loaded successfully.
+     */
     String getStartupError() {
         return storageError == null ? null : getStorageErrorMessage();
     }
@@ -111,12 +128,12 @@ public class TT {
 
     private String exit(String arguments) throws TTException {
         ensureNoArguments("bye", arguments);
-        return "Timeline tucked away. Bye for now!";
+        return "Bye. Hope to see you again soon!";
     }
 
     private String listTasks(String arguments) throws TTException {
         ensureNoArguments("list", arguments);
-        return formatTasks(tasks, "Here's everything on your timeline:");
+        return formatTasks(tasks, "Here are the tasks in your list:");
     }
 
     private String findTasks(String keywordText) throws TTException {
@@ -128,7 +145,7 @@ public class TT {
         List<Task> matchingTasks = tasks.stream()
                 .filter(task -> task.getTask().toLowerCase(Locale.ROOT).contains(keyword))
                 .toList();
-        return formatTasks(matchingTasks, "I found these tasks on your timeline:");
+        return formatTasks(matchingTasks, "Here are the matching tasks:");
     }
 
     private String sortTasks(String arguments) throws TTException {
@@ -137,7 +154,7 @@ public class TT {
         ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         tasks.sort(Comparator.comparing(Task::getTask, String.CASE_INSENSITIVE_ORDER));
         saveTasksOrRestore(originalTasks);
-        return formatTasks(tasks, "Your timeline is now sorted alphabetically:");
+        return formatTasks(tasks, "Tasks sorted alphabetically:");
     }
 
     private String setDone(String numberText, boolean isDone) throws TTException {
@@ -160,7 +177,7 @@ public class TT {
         }
 
         String message = isDone
-                ? "Timeline win! I've marked this task as done:\n"
+                ? "Nice! I've marked this task as done:\n"
                 : "Back in motion—I've marked this task as not done yet:\n";
         return message + task;
     }
@@ -208,7 +225,7 @@ public class TT {
     }
 
     private String addDeadline(String details) throws TTException {
-        int separator = findSingleSeparator(details, DEADLINE_SEPARATOR);
+        int separator = findSingleSeparator(details, SEPARATOR_DEADLINE);
         if (separator < 0) {
             throw new TTException("a deadline needs exactly one '/by' date, for example: "
                     + "deadline return book /by 2026-09-15.");
@@ -229,8 +246,8 @@ public class TT {
     }
 
     private String addEvent(String details) throws TTException {
-        int fromSeparator = findSingleSeparator(details, EVENT_FROM_SEPARATOR);
-        int toSeparator = findSingleSeparator(details, EVENT_TO_SEPARATOR);
+        int fromSeparator = findSingleSeparator(details, SEPARATOR_EVENT_FROM);
+        int toSeparator = findSingleSeparator(details, SEPARATOR_EVENT_TO);
         if (fromSeparator < 0 || toSeparator < 0 || fromSeparator > toSeparator) {
             throw new TTException("an event needs one '/from' followed by one '/to', for example: "
                     + "event meeting /from Mon 2pm /to 4pm.");
@@ -252,7 +269,7 @@ public class TT {
         ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         tasks.add(task);
         saveTasksOrRestore(originalTasks);
-        return "Locked into the timeline:\n" + task
+        return "Got it. I've added this task:\n" + task
                 + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
@@ -280,7 +297,7 @@ public class TT {
         }
 
         if (index < 0 || index >= taskCount) {
-            throw new TTException("task " + (index + 1) + " isn't on your timeline.");
+            throw new TTException("task " + (index + 1) + " isn't in your list.");
         }
         assert index >= 0 && index < taskCount : "Parsed task index must be within bounds";
         return index;
@@ -321,6 +338,6 @@ public class TT {
     }
 
     private String getStorageErrorMessage() {
-        return "I can't safely use your saved timeline. " + storageError;
+        return "I can't safely use your saved tasks. " + storageError;
     }
 }

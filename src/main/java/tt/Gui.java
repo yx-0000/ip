@@ -14,12 +14,20 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-/** Displays the task manager as an interactive JavaFX chatbot. */
+/**
+ * Displays the task manager as an interactive JavaFX chatbot.
+ */
 public class Gui extends Application {
     private final TT taskManager = new TT();
     private final VBox dialogContainer = new VBox(12);
     private final TextField userInput = new TextField();
     private final Button sendButton = new Button("Send");
+
+    /**
+     * Creates the JavaFX chatbot interface.
+     */
+    public Gui() {
+    }
 
     @Override
     public void start(Stage stage) {
@@ -42,7 +50,7 @@ public class Gui extends Application {
         stage.show();
 
         dialogContainer.getChildren().add(DialogBox.getBotDialog(
-                "Hello! I'm tt.TT, your tiny timeline keeper.\n\nTry: todo read a book"));
+                "Hello! I'm tt.TT, your friendly task manager.\n\nTry: todo read a book"));
         String startupError = taskManager.getStartupError();
         if (startupError != null) {
             dialogContainer.getChildren().add(DialogBox.getErrorDialog(startupError));
@@ -88,7 +96,9 @@ public class Gui extends Application {
         return inputArea;
     }
 
-    /** Adds the user's command and the task manager's response to the conversation. */
+    /**
+     * Adds the user's command and the task manager's response to the conversation.
+     */
     private void handleUserInput() {
         String input = userInput.getText().trim();
         if (input.isEmpty()) {
