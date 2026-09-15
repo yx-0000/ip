@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import tt.storage.StorageException;
 import tt.storage.TaskStorage;
 import tt.task.Deadline;
 import tt.task.Event;
@@ -15,8 +18,13 @@ import tt.task.Todo;
 
 /** Processes task-management commands and generates user-facing responses. */
 public class TT {
+    private static final Pattern DEADLINE_SEPARATOR = Pattern.compile("(?<!\\S)/by(?!\\S)");
+    private static final Pattern EVENT_FROM_SEPARATOR = Pattern.compile("(?<!\\S)/from(?!\\S)");
+    private static final Pattern EVENT_TO_SEPARATOR = Pattern.compile("(?<!\\S)/to(?!\\S)");
+    private static final String ERROR_PREFIX = "That task slipped through the timeline: ";
     private final ArrayList<Task> tasks;
     private final TaskStorage storage;
+    private String storageError;
 
     /** Creates a task manager backed by the default save file. */
     public TT() {
@@ -27,27 +35,57 @@ public class TT {
     public TT(TaskStorage storage) {
         assert storage != null : "Storage must not be null";
         this.storage = storage;
-        tasks = storage.load();
+        ArrayList<Task> loadedTasks;
+        try {
+            loadedTasks = storage.load();
+        } catch (StorageException e) {
+            loadedTasks = new ArrayList<>();
+            storageError = e.getMessage();
+        }
+        tasks = loadedTasks;
         assert tasks != null : "Storage must return a task list";
     }
 
     /** Processes one user command and returns the chatbot's response. */
     public String getResponse(String input) {
-        String trimmedInput = input.trim();
-        if (trimmedInput.isEmpty()) {
-            return "Please enter a command.";
+        return getCommandResult(input).message();
+    }
+
+    /** Processes one command and includes whether its response represents an error. */
+    CommandResult getCommandResult(String input) {
+        if (input == null) {
+            return CommandResult.error(ERROR_PREFIX + "please enter a command.");
         }
 
-        String commandWord = trimmedInput.split(" ", 2)[0];
-        String rest = trimmedInput.contains(" ")
-                ? trimmedInput.substring(trimmedInput.indexOf(' ') + 1).trim()
+        String trimmedInput = input.strip();
+        if (trimmedInput.isEmpty()) {
+            return CommandResult.error(ERROR_PREFIX + "please enter a command.");
+        }
+
+        String[] commandParts = trimmedInput.split("\\s+", 2);
+        String commandWord = commandParts[0];
+        String arguments = commandParts.length == 2
+                ? commandParts[1].replaceAll("\\s+", " ").trim()
                 : "";
+        Command command = Command.fromString(commandWord);
+
+        if (storageError != null && command != Command.BYE) {
+            return CommandResult.error(getStorageErrorMessage());
+        }
 
         try {
-            return execute(Command.fromString(commandWord), rest);
+            return CommandResult.success(execute(command, arguments));
         } catch (TTException e) {
-            return e.getMessage();
+            return CommandResult.error(ERROR_PREFIX + e.getMessage());
+        } catch (StorageException e) {
+            storageError = e.getMessage();
+            return CommandResult.error(getStorageErrorMessage());
         }
+    }
+
+    /** Returns a startup storage warning, or {@code null} when storage loaded successfully. */
+    String getStartupError() {
+        return storageError == null ? null : getStorageErrorMessage();
     }
 
     private String execute(Command command, String rest) throws TTException {
@@ -55,8 +93,8 @@ public class TT {
         assert rest != null : "Command arguments must not be null";
 
         return switch (command) {
-            case BYE -> "Bye. Hope to see you again soon!";
-            case LIST -> formatTasks(tasks, "Here are the tasks in your list:");
+            case BYE -> exit(rest);
+            case LIST -> listTasks(rest);
             case FIND -> findTasks(rest);
             case SORT -> sortTasks(rest);
             case MARK -> setDone(rest, true);
@@ -66,40 +104,60 @@ public class TT {
             case TODO -> addTodo(rest);
             case DEADLINE -> addDeadline(rest);
             case EVENT -> addEvent(rest);
-            case UNKNOWN -> throw new TTException("OOPS!!! I'm sorry, but I don't know what that means :-(");
+            case UNKNOWN -> throw new TTException("I don't recognize that command. Try list, todo, deadline, "
+                    + "event, find, sort, mark, unmark, delete, clear, or bye.");
         };
+    }
+
+    private String exit(String arguments) throws TTException {
+        ensureNoArguments("bye", arguments);
+        return "Timeline tucked away. Bye for now!";
+    }
+
+    private String listTasks(String arguments) throws TTException {
+        ensureNoArguments("list", arguments);
+        return formatTasks(tasks, "Here's everything on your timeline:");
     }
 
     private String findTasks(String keywordText) throws TTException {
         if (keywordText.isEmpty()) {
-            throw new TTException("OOPS!!! Please provide a keyword to search for, e.g. find book.");
+            throw new TTException("tell me what to find, for example: find book.");
         }
 
         String keyword = keywordText.toLowerCase(Locale.ROOT);
         List<Task> matchingTasks = tasks.stream()
                 .filter(task -> task.getTask().toLowerCase(Locale.ROOT).contains(keyword))
                 .toList();
-        return formatTasks(matchingTasks, "Here are the matching tasks in your list:");
+        return formatTasks(matchingTasks, "I found these tasks on your timeline:");
     }
 
     private String sortTasks(String arguments) throws TTException {
-        if (!arguments.isEmpty()) {
-            throw new TTException("OOPS!!! The sort command does not take additional arguments.");
-        }
+        ensureNoArguments("sort", arguments);
 
+        ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         tasks.sort(Comparator.comparing(Task::getTask, String.CASE_INSENSITIVE_ORDER));
-        storage.save(tasks);
-        return formatTasks(tasks, "Here are your tasks sorted alphabetically:");
+        saveTasksOrRestore(originalTasks);
+        return formatTasks(tasks, "Your timeline is now sorted alphabetically:");
     }
 
     private String setDone(String numberText, boolean isDone) throws TTException {
         Task task = tasks.get(parseIndex(numberText, tasks.size()));
+        boolean wasDone = task.isDone();
         if (isDone) {
             task.mark();
         } else {
             task.unmark();
         }
-        storage.save(tasks);
+        try {
+            storage.save(tasks);
+        } catch (StorageException e) {
+            if (wasDone) {
+                task.mark();
+            } else {
+                task.unmark();
+            }
+            throw e;
+        }
 
         String message = isDone
                 ? "Nice! I've marked this task as done:\n"
@@ -108,14 +166,16 @@ public class TT {
     }
 
     private String deleteTask(String numberText) throws TTException {
+        ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         Task removedTask = tasks.remove(parseIndex(numberText, tasks.size()));
-        storage.save(tasks);
+        saveTasksOrRestore(originalTasks);
         return "Noted. I've removed this task:\n" + removedTask
                 + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
     private String clearTasks(String taskTypeText) throws TTException {
         String taskType = taskTypeText.toLowerCase(Locale.ROOT);
+        ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         int originalTaskCount = tasks.size();
 
         switch (taskType) {
@@ -123,13 +183,12 @@ public class TT {
             case "deadline", "deadlines" -> tasks.removeIf(task -> task instanceof Deadline);
             case "event", "events" -> tasks.removeIf(task -> task instanceof Event);
             case "all", "task", "tasks" -> tasks.clear();
-            case "" -> throw new TTException("OOPS!!! To clear tasks, use clear todo, clear deadline, "
-                    + "clear event, or clear all.");
-            default -> throw new TTException("OOPS!!! I can only clear todo, deadline, event, or all tasks.");
+            case "" -> throw new TTException("tell me what to clear: todo, deadline, event, or all.");
+            default -> throw new TTException("I can clear only todo, deadline, event, or all tasks.");
         }
 
         int clearedTaskCount = originalTaskCount - tasks.size();
-        storage.save(tasks);
+        saveTasksOrRestore(originalTasks);
         return "Cleared " + clearedTaskCount + " " + getClearDescription(taskType, clearedTaskCount) + ".";
     }
 
@@ -144,45 +203,45 @@ public class TT {
     }
 
     private String addTodo(String description) throws TTException {
-        if (description.isEmpty()) {
-            throw new TTException("OOPS!!! The description of a todo cannot be empty.");
-        }
+        validateDescription(description, "todo");
         return addTask(new Todo(description));
     }
 
     private String addDeadline(String details) throws TTException {
-        if (!details.contains("/by")) {
-            throw new TTException("OOPS!!! A deadline needs a '/by' date, e.g. "
-                    + "deadline return book /by 2019-10-15.");
+        int separator = findSingleSeparator(details, DEADLINE_SEPARATOR);
+        if (separator < 0) {
+            throw new TTException("a deadline needs exactly one '/by' date, for example: "
+                    + "deadline return book /by 2026-09-15.");
         }
 
-        int separator = details.indexOf("/by");
         String description = details.substring(0, separator).trim();
         String dateText = details.substring(separator + 3).trim();
-        if (description.isEmpty() || dateText.isEmpty()) {
-            throw new TTException("OOPS!!! The description or /by date of a deadline cannot be empty.");
+        validateDescription(description, "deadline");
+        if (dateText.isEmpty()) {
+            throw new TTException("the /by date of a deadline cannot be empty.");
         }
 
         try {
             return addTask(new Deadline(description, LocalDate.parse(dateText)));
         } catch (DateTimeParseException e) {
-            throw new TTException("OOPS!!! Please enter the deadline as yyyy-MM-dd, e.g. 2019-10-15.");
+            throw new TTException("use a real deadline date in yyyy-MM-dd format, for example: 2026-09-15.");
         }
     }
 
     private String addEvent(String details) throws TTException {
-        int fromSeparator = details.indexOf("/from");
-        int toSeparator = details.indexOf("/to", Math.max(fromSeparator, 0) + 5);
-        if (fromSeparator < 0 || toSeparator < 0) {
-            throw new TTException("OOPS!!! An event needs both '/from' and '/to', "
-                    + "e.g. event meeting /from Mon 2pm /to 4pm.");
+        int fromSeparator = findSingleSeparator(details, EVENT_FROM_SEPARATOR);
+        int toSeparator = findSingleSeparator(details, EVENT_TO_SEPARATOR);
+        if (fromSeparator < 0 || toSeparator < 0 || fromSeparator > toSeparator) {
+            throw new TTException("an event needs one '/from' followed by one '/to', for example: "
+                    + "event meeting /from Mon 2pm /to 4pm.");
         }
 
         String description = details.substring(0, fromSeparator).trim();
         String from = details.substring(fromSeparator + 5, toSeparator).trim();
         String to = details.substring(toSeparator + 3).trim();
-        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            throw new TTException("OOPS!!! The description, /from, or /to of an event cannot be empty.");
+        validateDescription(description, "event");
+        if (from.isEmpty() || to.isEmpty()) {
+            throw new TTException("the /from and /to times of an event cannot be empty.");
         }
         return addTask(new Event(description, from, to));
     }
@@ -190,9 +249,10 @@ public class TT {
     private String addTask(Task task) {
         assert task != null : "Task to add must not be null";
 
+        ArrayList<Task> originalTasks = new ArrayList<>(tasks);
         tasks.add(task);
-        storage.save(tasks);
-        return "Got it. I've added this task:\n" + task
+        saveTasksOrRestore(originalTasks);
+        return "Locked into the timeline:\n" + task
                 + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
@@ -216,13 +276,51 @@ public class TT {
         try {
             index = Integer.parseInt(numberText.trim()) - 1;
         } catch (NumberFormatException e) {
-            throw new TTException("OOPS!!! Please enter a valid task number, e.g. mark 2.");
+            throw new TTException("enter one valid task number, for example: mark 2.");
         }
 
         if (index < 0 || index >= taskCount) {
-            throw new TTException("OOPS!!! That task number doesn't exist.");
+            throw new TTException("task " + (index + 1) + " isn't on your timeline.");
         }
         assert index >= 0 && index < taskCount : "Parsed task index must be within bounds";
         return index;
+    }
+
+    private void ensureNoArguments(String commandWord, String arguments) throws TTException {
+        if (!arguments.isEmpty()) {
+            throw new TTException("the " + commandWord + " command does not take extra details.");
+        }
+    }
+
+    private void validateDescription(String description, String taskType) throws TTException {
+        if (description.isEmpty()) {
+            throw new TTException("the description of a " + taskType + " cannot be empty.");
+        }
+        if (description.contains("|")) {
+            throw new TTException("task descriptions cannot contain the '|' character.");
+        }
+    }
+
+    private int findSingleSeparator(String text, Pattern separatorPattern) {
+        Matcher matcher = separatorPattern.matcher(text);
+        if (!matcher.find()) {
+            return -1;
+        }
+        int separatorIndex = matcher.start();
+        return matcher.find() ? -1 : separatorIndex;
+    }
+
+    private void saveTasksOrRestore(ArrayList<Task> originalTasks) {
+        try {
+            storage.save(tasks);
+        } catch (StorageException e) {
+            tasks.clear();
+            tasks.addAll(originalTasks);
+            throw e;
+        }
+    }
+
+    private String getStorageErrorMessage() {
+        return "I can't safely use your saved timeline. " + storageError;
     }
 }

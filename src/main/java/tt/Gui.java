@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -25,6 +26,7 @@ public class Gui extends Application {
         HBox inputArea = createInputArea();
 
         BorderPane mainLayout = new BorderPane();
+        mainLayout.setTop(createHeader());
         mainLayout.setCenter(scrollPane);
         mainLayout.setBottom(inputArea);
         mainLayout.getStyleClass().add("main-layout");
@@ -39,8 +41,25 @@ public class Gui extends Application {
         stage.show();
 
         dialogContainer.getChildren().add(DialogBox.getBotDialog(
-                "Hello! I'm tt.TT. What can I do for you?\n\nTry: todo read a book"));
+                "Hello! I'm tt.TT, your tiny timeline keeper.\n\nTry: todo read a book"));
+        String startupError = taskManager.getStartupError();
+        if (startupError != null) {
+            dialogContainer.getChildren().add(DialogBox.getErrorDialog(startupError));
+        }
         userInput.requestFocus();
+    }
+
+    private VBox createHeader() {
+        Label appName = new Label("tt.TT");
+        appName.getStyleClass().add("app-name");
+
+        Label tagline = new Label("Keep every task on track");
+        tagline.getStyleClass().add("tagline");
+
+        VBox header = new VBox(2, appName, tagline);
+        header.setPadding(new Insets(14, 16, 12, 16));
+        header.getStyleClass().add("header");
+        return header;
     }
 
     private ScrollPane createConversationPane() {
@@ -71,21 +90,21 @@ public class Gui extends Application {
     private void handleUserInput() {
         String input = userInput.getText().trim();
         if (input.isEmpty()) {
+            CommandResult result = taskManager.getCommandResult(input);
+            dialogContainer.getChildren().add(DialogBox.getErrorDialog(result.message()));
             return;
         }
 
-        if (input.equalsIgnoreCase("clear")) {
-            dialogContainer.getChildren().clear();
-            userInput.clear();
-            return;
-        }
+        CommandResult result = taskManager.getCommandResult(input);
 
         dialogContainer.getChildren().addAll(
                 DialogBox.getUserDialog(input),
-                DialogBox.getBotDialog(taskManager.getResponse(input)));
+                result.isError()
+                        ? DialogBox.getErrorDialog(result.message())
+                        : DialogBox.getBotDialog(result.message()));
         userInput.clear();
 
-        if (Command.fromString(input.split(" ", 2)[0]) == Command.BYE) {
+        if (!result.isError() && Command.fromString(input.split("\\s+", 2)[0]) == Command.BYE) {
             userInput.setDisable(true);
             sendButton.setDisable(true);
         }

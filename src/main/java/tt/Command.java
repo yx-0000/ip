@@ -8,6 +8,9 @@ public enum Command {
 
     /** Converts user input into a command, or {@link #UNKNOWN} if it is unsupported. */
     public static Command fromString(String commandWord) {
+        if (commandWord == null) {
+            return UNKNOWN;
+        }
         try {
             return Command.valueOf(commandWord.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {

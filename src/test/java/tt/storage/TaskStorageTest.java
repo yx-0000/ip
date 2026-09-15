@@ -1,7 +1,6 @@
 package tt.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,24 +43,38 @@ class TaskStorageTest {
     }
 
     @Test
-    void load_missingOrMalformedFile_returnsOnlyValidTasks() throws Exception {
+    void load_missingFile_returnsEmptyTaskList() {
+        Path missingFile = temporaryDirectory.resolve("missing.txt");
+
+        List<Task> loaded = new TaskStorage(missingFile).load();
+
+        assertEquals(0, loaded.size());
+    }
+
+    @Test
+    void load_malformedFile_throwsStorageExceptionWithLineNumber() throws Exception {
         Path saveFile = temporaryDirectory.resolve("tasks.txt");
         Files.writeString(saveFile, String.join(System.lineSeparator(),
                 "T | 0 | valid todo",
                 "D | 1 | valid deadline | 2026-09-01",
                 "E | 0 | valid event | 10am | 11am",
-                "not a valid record",
-                "T | 2 | invalid status",
-                "D | 0 | invalid date | not-a-date",
-                "T | 0 | "));
+                "not a valid record"));
 
-        List<Task> loaded = new TaskStorage(saveFile).load();
+        StorageException exception = assertThrows(StorageException.class, () -> new TaskStorage(saveFile).load());
 
-        assertEquals(3, loaded.size());
-        assertFalse(loaded.get(0).isDone());
-        assertTrue(loaded.get(1).isDone());
-        assertEquals("valid event", loaded.get(2).getTask());
-        assertEquals(0, new TaskStorage(temporaryDirectory.resolve("missing.txt")).load().size());
+        assertTrue(exception.getMessage().contains("line 4"));
+    }
+
+    @Test
+    void save_parentPathIsAFile_throwsStorageException() throws Exception {
+        Path parentFile = temporaryDirectory.resolve("not-a-directory");
+        Files.writeString(parentFile, "blocking file");
+        TaskStorage storage = new TaskStorage(parentFile.resolve("tasks.txt"));
+
+        StorageException exception = assertThrows(StorageException.class,
+                () -> storage.save(List.of(new Todo("read book"))));
+
+        assertTrue(exception.getMessage().contains("couldn't save"));
     }
 
     @Test

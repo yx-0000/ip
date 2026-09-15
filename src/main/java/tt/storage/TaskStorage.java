@@ -2,13 +2,16 @@ package tt.storage;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import tt.task.Deadline;
 import tt.task.Event;
@@ -26,46 +29,72 @@ public class TaskStorage {
 
     /** Creates storage at the supplied path, primarily useful for tests. */
     public TaskStorage(Path filePath) {
-        this.filePath = filePath;
+        this.filePath = Objects.requireNonNull(filePath);
     }
 
-    /** Loads all valid tasks, returning an empty list when the file is absent. */
+    /**
+     * Loads all tasks, returning an empty list when the save file is absent.
+     *
+     * @throws StorageException if the file cannot be read or contains invalid data
+     */
     public ArrayList<Task> load() {
         ArrayList<Task> tasks = new ArrayList<>();
-        if (!Files.exists(filePath)) {
+        if (Files.notExists(filePath)) {
             return tasks;
         }
         try {
-            for (String line : Files.readAllLines(filePath, StandardCharsets.UTF_8)) {
+            List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
+            for (int i = 0; i < lines.size(); i++) {
                 try {
-                    Task task = parse(line);
-                    if (task != null) {
-                        tasks.add(task);
-                    }
+                    tasks.add(parse(lines.get(i)));
                 } catch (IllegalArgumentException | DateTimeParseException ignored) {
-                    // Ignore malformed lines so one corrupted task does not lose all data.
+                    throw new StorageException("The save file contains invalid data on line " + (i + 1)
+                            + ". Fix or remove that line, then restart tt.TT.");
                 }
             }
         } catch (IOException e) {
-            System.out.println(" OOPS!!! I could not read the save file.");
+            throw new StorageException("I couldn't read the save file at " + filePath
+                    + ". Check that the file is readable, then restart tt.TT.", e);
         }
         return tasks;
     }
 
-    /** Saves the complete task list, creating its parent directory when necessary. */
+    /**
+     * Saves the complete task list, creating its parent directory when necessary.
+     *
+     * @throws StorageException if the tasks cannot be written
+     */
     public void save(List<Task> tasks) {
+        Objects.requireNonNull(tasks);
+        ArrayList<String> lines = new ArrayList<>();
+        for (Task task : tasks) {
+            lines.add(serialize(task));
+        }
+
         try {
-            Path parent = filePath.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
+            Path absoluteFilePath = filePath.toAbsolutePath();
+            Path parent = absoluteFilePath.getParent();
+            Files.createDirectories(parent);
+            String temporaryFilePrefix = absoluteFilePath.getFileName() + "---";
+            Path temporaryFile = Files.createTempFile(parent, temporaryFilePrefix, ".tmp");
+            try {
+                Files.write(temporaryFile, lines, StandardCharsets.UTF_8);
+                moveIntoPlace(temporaryFile, absoluteFilePath);
+            } finally {
+                Files.deleteIfExists(temporaryFile);
             }
-            ArrayList<String> lines = new ArrayList<>();
-            for (Task task : tasks) {
-                lines.add(serialize(task));
-            }
-            Files.write(filePath, lines, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            System.out.println(" OOPS!!! I could not save your tasks.");
+            throw new StorageException("I couldn't save tasks to " + filePath
+                    + ". Check that the location is writable, then restart tt.TT.", e);
+        }
+    }
+
+    private void moveIntoPlace(Path temporaryFile, Path destination) throws IOException {
+        try {
+            Files.move(temporaryFile, destination, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(temporaryFile, destination, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -83,18 +112,22 @@ public class TaskStorage {
             throw new IllegalArgumentException();
         }
         Task task = switch (fields[0]) {
-            case "T" -> new Todo(fields[2]);
-            case "D" -> fields.length >= 4 ? new Deadline(fields[2], LocalDate.parse(fields[3].trim())) : null;
-            case "E" -> fields.length >= 5 ? new Event(fields[2], fields[3], fields[4]) : null;
+            case "T" -> fields.length == 3 ? new Todo(fields[2]) : null;
+            case "D" -> fields.length == 4 ? new Deadline(fields[2], LocalDate.parse(fields[3])) : null;
+            case "E" -> fields.length == 5 ? new Event(fields[2], fields[3], fields[4]) : null;
             default -> null;
         };
-        if (task == null || task.getTask().isEmpty()) {
+        if (task == null || task.getTask().isEmpty() || hasBlankEventTime(task)) {
             throw new IllegalArgumentException();
         }
         if (fields[1].equals("1")) {
             task.mark();
         }
         return task;
+    }
+
+    private boolean hasBlankEventTime(Task task) {
+        return task instanceof Event event && (event.getFrom().isEmpty() || event.getTo().isEmpty());
     }
 
     private boolean isValidCompletionStatus(String status) {
