@@ -1,10 +1,15 @@
 .root {
     -fx-font-family: "Segoe UI", sans-serif;
-    -fx-font-size: 14px;
+    -fx-font-size: 12px;
 }
 
 .main-layout,
-.conversation-pane,
+.conversation-pane > .viewport {
+    -fx-background-image: url("../images/background.png");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
 .conversation-pane > .viewport {
     -fx-background-color: #f5f7fb;
 }

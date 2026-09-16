@@ -1,33 +1,39 @@
 package tt;
 
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.Circle;
 
 /**
  * Represents one user or chatbot message in the conversation.
  */
 public class DialogBox extends HBox {
-    private static final String AVATAR_BOT = "TT";
+    private static final double AVATAR_RADIUS = 21;
+    private static final double AVATAR_SIZE = 42;
     private static final String AVATAR_ERROR = "!";
     private static final String AVATAR_USER = "You";
 
-    private DialogBox(String text, String avatarText, boolean isUser, boolean isError) {
+    private DialogBox(String text, boolean isUser, boolean isError) {
         Label message = new Label(text);
         message.setWrapText(true);
         message.setMaxWidth(350);
 
-        Label avatar = new Label(avatarText);
-        avatar.setMinSize(42, 42);
-        avatar.setAlignment(Pos.CENTER);
+        Node avatar;
 
         if (isUser) {
+            avatar = createTextAvatar(AVATAR_USER);
             message.getStyleClass().add("user-message");
             avatar.getStyleClass().add("user-avatar");
         } else if (isError) {
+            avatar = createTextAvatar(AVATAR_ERROR);
             message.getStyleClass().add("error-message");
             avatar.getStyleClass().add("error-avatar");
         } else {
+            avatar = createBotAvatar();
             message.getStyleClass().add("bot-message");
             avatar.getStyleClass().add("bot-avatar");
         }
@@ -41,6 +47,23 @@ public class DialogBox extends HBox {
         }
     }
 
+    private static ImageView createBotAvatar() {
+        ImageView avatar = new ImageView(new Image(
+                DialogBox.class.getResourceAsStream("/images/tt.png")));
+        avatar.setFitWidth(AVATAR_SIZE);
+        avatar.setFitHeight(AVATAR_SIZE);
+        avatar.setPreserveRatio(true);
+        avatar.setClip(new Circle(AVATAR_RADIUS, AVATAR_RADIUS, AVATAR_RADIUS));
+        return avatar;
+    }
+
+    private static Label createTextAvatar(String text) {
+        Label avatar = new Label(text);
+        avatar.setMinSize(AVATAR_SIZE, AVATAR_SIZE);
+        avatar.setAlignment(Pos.CENTER);
+        return avatar;
+    }
+
     /**
      * Creates a right-aligned dialog for a command entered by the user.
      *
@@ -48,7 +71,7 @@ public class DialogBox extends HBox {
      * @return dialog containing the user's command.
      */
     public static DialogBox getUserDialog(String text) {
-        return new DialogBox(text, AVATAR_USER, true, false);
+        return new DialogBox(text, true, false);
     }
 
     /**
@@ -58,7 +81,7 @@ public class DialogBox extends HBox {
      * @return dialog containing the chatbot's response.
      */
     public static DialogBox getBotDialog(String text) {
-        return new DialogBox(text, AVATAR_BOT, false, false);
+        return new DialogBox(text, false, false);
     }
 
     /**
@@ -68,6 +91,6 @@ public class DialogBox extends HBox {
      * @return dialog containing the highlighted error.
      */
     public static DialogBox getErrorDialog(String text) {
-        return new DialogBox(text, AVATAR_ERROR, false, true);
+        return new DialogBox(text, false, true);
     }
 }

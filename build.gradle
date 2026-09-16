@@ -23,19 +23,19 @@ repositories {
 }
 
 def javafxVersion = '25.0.1'
-def javafxPlatform = org.gradle.internal.os.OperatingSystem.current().isWindows()
-        ? 'win' : org.gradle.internal.os.OperatingSystem.current().isMacOsX() ? 'mac' : 'linux'
 
 dependencies {
     String jUnitVersion = '5.14.4'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"
-
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jUnitVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
-    implementation "org.openjfx:javafx-base:${javafxVersion}:${javafxPlatform}"
-    implementation "org.openjfx:javafx-graphics:${javafxVersion}:${javafxPlatform}"
-    implementation "org.openjfx:javafx-controls:${javafxVersion}:${javafxPlatform}"
+
+    ['win', 'mac', 'linux'].each { platform ->
+        implementation "org.openjfx:javafx-base:${javafxVersion}:${platform}"
+        implementation "org.openjfx:javafx-graphics:${javafxVersion}:${platform}"
+        implementation "org.openjfx:javafx-controls:${javafxVersion}:${platform}"
+    }
 }
 
 test {
